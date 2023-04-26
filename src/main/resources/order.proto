@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+
+option java_multiple_files = true;
+option java_package = "grpc.orderService";
+option java_outer_classname = "OrderServiceImpl";
+
+package orderService;
+
+service OrderService {
+  rpc placeOrder(stream PlaceOrderRequest) returns (PlaceOrderResponse) {}
+  rpc cancelOrder(CancelOrderRequest) returns (CancelOrderResponse) {}
+  rpc getOrderDetails(GetOrderRequest) returns (GetOrderResponse) {}
+  rpc getTotalSales(TotalSalesRequest) returns (TotalSalesResponse) {}
+  rpc getAllOrders(GetAllOrdersRequest) returns (stream GetOrderResponse) {}
+}
+
+message PlaceOrderRequest {
+  int32 stockNumber = 1;
+  int32 quantity = 2;
+}
+
+message PlaceOrderResponse {
+  sint32 orderNumber = 1;
+}
+
+message CancelOrderRequest {
+  int32 orderNumber = 1;
+}
+
+message CancelOrderResponse {
+  bool success = 1;
+}
+
+message GetOrderRequest {
+  int32 oredrNumber = 1;
+}
+
+message GetOrderResponse {
+  string orderDetails = 1;
+}
+
+message TotalSalesRequest{}
+
+message TotalSalesResponse{
+  float salesTotal = 1;
+}
+
+message GetAllOrdersRequest {}

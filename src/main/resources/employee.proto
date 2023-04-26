@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+
+option java_multiple_files = true;
+option java_package = "grpc.employeeService";
+option java_outer_classname = "EmployeeServiceImpl";
+
+package employeeService;
+
+service EmployeeService {
+  rpc addEmployee (AddEmployeeRequest) returns (AddEmployeeResponse) {}
+  rpc getEmployee (GetEmployeeRequest) returns (GetEmployeeResponse) {}
+  rpc getAllEmployees (GetAllEmployeesRequest) returns (stream GetEmployeeResponse) {}
+}
+
+message AddEmployeeRequest {
+  int32 employeeNumber = 1;
+  string employeeName = 2;
+  string position = 3;
+  int32 salary = 4;
+}
+
+message AddEmployeeResponse {
+  bool success = 1;
+}
+
+message GetEmployeeRequest {
+  int32 employeeNumber = 1;
+}
+
+message GetEmployeeResponse {
+  string employeeDetails = 1;
+}
+
+message GetAllEmployeesRequest {}

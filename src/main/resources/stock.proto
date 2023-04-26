@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+
+option java_multiple_files = true;
+option java_package = "grpc.stockService";
+option java_outer_classname = "StockServiceImpl";
+
+package stockService;
+
+service StockService {
+  rpc updateProductStock(UpdateProductStockRequest) returns (UpdateProductStockResponse){}
+  rpc getStockLevel(StockLevelRequest) returns (StockLevelResponse) {}
+  rpc updateStockLevel(stream UpdateProductStockRequest) returns (stream UpdateProductStockResponse) {}
+}
+
+message UpdateProductStockRequest {
+  int32 stockNumber = 1;
+  sint32 qty = 2; // could be a negative number if decreasing quantity
+}
+
+message UpdateProductStockResponse {
+  bool success = 1;
+}
+
+message StockLevelRequest {
+  int32 stockNumber = 1;
+}
+
+message StockLevelResponse {
+  int32 quantity = 1;
+}
