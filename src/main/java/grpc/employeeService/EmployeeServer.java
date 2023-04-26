@@ -2,17 +2,30 @@ package grpc.employeeService;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import warehouse.Employee;
+import warehouse.Stock;
+
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Properties;
+import java.util.Scanner;
 
 public class EmployeeServer extends EmployeeServiceGrpc.EmployeeServiceImplBase {
-    public static void main(String[] args) {
+    private static ArrayList<Employee> employees;
+    public static void main(String[] args) throws Exception {
+        // load stock data with all products
+        employees = new ArrayList<>();
+        loadEmployeesData();
+        //System.out.println(employees.get(0));
+
+        // start server
         EmployeeServer employeeServer = new EmployeeServer();
         Properties prop = employeeServer.getProperties();
         employeeServer.registerService(prop);
@@ -90,6 +103,26 @@ public class EmployeeServer extends EmployeeServiceGrpc.EmployeeServiceImplBase 
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        }
+    }
+
+    public static void loadEmployeesData() throws Exception {
+        //parsing and reading the CSV file data into the film (object) array
+        // provide the path here...
+        File directory = new File(".//Files");
+        String employeesFile = directory.getAbsolutePath() + "//Employees.csv";
+        Scanner sc = new Scanner(new File(employeesFile));
+
+        // this will just print the header in CSV file
+        sc.nextLine();
+
+        String st;
+
+        while (sc.hasNextLine())  //returns a boolean value
+        {
+            st = sc.nextLine();
+            String[] data = st.split(",");
+            employees.add(new Employee(Integer.parseInt(data[0]), data[1], data[2], Float.parseFloat(data[3])));
         }
     }
 }

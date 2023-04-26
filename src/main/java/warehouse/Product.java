@@ -7,13 +7,13 @@ package warehouse;
 
 public class Product implements Comparable<Object> {
     private final int stockNumber;
-    private final String product;
+    private final String description;
     private final float price;
     private final int quantity;
 
     public Product(int stockNumber, String description, float price, int qty) {
         this.stockNumber = stockNumber;
-        this.product = description;
+        this.description = description;
         this.price = price;
         this.quantity = qty;
 
@@ -28,13 +28,13 @@ public class Product implements Comparable<Object> {
     public int getStockNumber() {
         return stockNumber;
     }
-    public String getProduct() {return product;
+    public String getDescription() {return description;
     }
     public float getPrice() {
         return price;
     }
 
-    public float getQuantity() {
+    public int getQuantity() {
         return quantity;
     }
 
@@ -42,7 +42,7 @@ public class Product implements Comparable<Object> {
     public String toString() {
         return "Product{" +
                 "stockNumber: " + stockNumber +
-                ", description: '" + product +
+                ", description: '" + description +
                 ", price: €" + price +
                 ", quantity: " + quantity + '\'' +
                 '}';

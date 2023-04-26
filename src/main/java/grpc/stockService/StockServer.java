@@ -2,17 +2,30 @@ package grpc.stockService;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import warehouse.Product;
+import warehouse.Stock;
+
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.Scanner;
 
 public class StockServer extends StockServiceGrpc.StockServiceImplBase {
-    public static void main(String[] args) {
+    private static Stock stock;
+    public static void main(String[] args) throws FileNotFoundException {
+        // load stock data with all products
+        stock = new Stock();
+        loadStockData();
+        //System.out.println(stock.getProduct(1001));
+
+        // start server
         StockServer stockServer = new StockServer();
         Properties prop = stockServer.getProperties();
         stockServer.registerService(prop);
@@ -90,6 +103,24 @@ public class StockServer extends StockServiceGrpc.StockServiceImplBase {
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        }
+    }
+
+    private static void loadStockData() throws FileNotFoundException {
+        File directory = new File(".//Files");
+        String stockFile = directory.getAbsolutePath() + "//Stock.csv";
+        Scanner sc = new Scanner(new File(stockFile));
+
+        // this will just print the header in CSV file
+        sc.nextLine();
+
+        String st;
+
+        while (sc.hasNextLine())  //returns a boolean value
+        {
+            st = sc.nextLine();
+            String[] data = st.split(",");
+            stock.addProduct(new Product(Integer.parseInt(data[0]), data[1], Float.parseFloat(data[2]), Integer.parseInt(data[3])));
         }
     }
 }

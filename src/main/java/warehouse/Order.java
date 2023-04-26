@@ -61,7 +61,7 @@ public class Order implements Comparable<Object> {
             sb.append("Order details:\n");
             for (OrderItem item : items) {
                 Product p = item.product;
-                sb.append("    - Product:").append(p.getProduct()).append(", U.Price:€").append(p.getPrice())
+                sb.append("    - Product:").append(p.getDescription()).append(", U.Price:€").append(p.getPrice())
                         .append(", Qty:").append(item.quantity).append(", SubTotal:€")
                         .append(String.format("%,.2f", item.value)).append("\n");
             }
