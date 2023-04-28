@@ -2,8 +2,8 @@ package grpc.employeeService;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
 import warehouse.Employee;
-import warehouse.Stock;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
@@ -78,13 +78,13 @@ public class EmployeeServer extends EmployeeServiceGrpc.EmployeeServiceImplBase 
             // Create a JmDNS instance
             JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
 
-            String service_type = prop.getProperty("service_type");//"_http._tcp.local.";
-            String service_name = prop.getProperty("service_name");// "example";
+            String service_type = prop.getProperty("service_type");
+            String service_name = prop.getProperty("service_name");
             // int service_port = 1234;
-            int service_port = Integer.parseInt(prop.getProperty("service_port"));// #.50051;
+            int service_port = Integer.parseInt(prop.getProperty("service_port"));
 
 
-            String service_description_properties = prop.getProperty("service_description");//"path=index.html";
+            String service_description_properties = prop.getProperty("service_description");
 
             // Register a service
             ServiceInfo serviceInfo = ServiceInfo.create(service_type, service_name, service_port, service_description_properties);
@@ -124,5 +124,27 @@ public class EmployeeServer extends EmployeeServiceGrpc.EmployeeServiceImplBase 
             String[] data = st.split(",");
             employees.add(new Employee(Integer.parseInt(data[0]), data[1], data[2], Float.parseFloat(data[3])));
         }
+    }
+
+    // services implementations
+
+    // GetEmployee service, returns employee details upon receiving request with employee id
+
+    @Override
+    public void getEmployee(GetEmployeeRequest request, StreamObserver<GetEmployeeResponse> responseObserver) {
+        int employeeNumber = request.getEmployeeNumber();
+        System.out.println("Receiving request for employee number: " + employeeNumber);
+        // search for employee with given number
+        for (Employee employee : employees) {
+            if (employee.getEmployeeNumber() == employeeNumber) {
+                GetEmployeeResponse response = GetEmployeeResponse.newBuilder().setEmployeeDetails(employee.toString()).build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+                return;
+            }
+        }
+        GetEmployeeResponse response = GetEmployeeResponse.newBuilder().setEmployeeDetails("Employee not found!").build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 }
