@@ -1,10 +1,12 @@
 package client;
 
 import grpc.employeeService.EmployeeServiceGrpc;
+import grpc.employeeService.GetAllEmployeesRequest;
 import grpc.employeeService.GetEmployeeRequest;
 import grpc.employeeService.GetEmployeeResponse;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.stub.StreamObserver;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
@@ -17,6 +19,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Iterator;
 
 public class MainGUIApplication {
 
@@ -28,7 +31,6 @@ public class MainGUIApplication {
 
     private JFrame frame;
     private JTextField textNumber1;
-    private JTextField textNumber2;
     private JTextArea textResponse;
 
     /**
@@ -141,7 +143,7 @@ public class MainGUIApplication {
     private void initialize() {
         frame = new JFrame();
         frame.setTitle("Client - Service Controller");
-        frame.setBounds(100, 100, 500, 300);
+        frame.setBounds(100, 100, 800, 500);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         BoxLayout bl = new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS);
@@ -152,19 +154,13 @@ public class MainGUIApplication {
         frame.getContentPane().add(panel_service_1);
         panel_service_1.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
-        JLabel lblNewLabel_1 = new JLabel("Number 1");
+        JLabel lblNewLabel_1 = new JLabel("Employee Number");
         panel_service_1.add(lblNewLabel_1);
 
         textNumber1 = new JTextField();
         panel_service_1.add(textNumber1);
         textNumber1.setColumns(10);
 
-        JLabel lblNewLabel_2 = new JLabel("Number 2");
-        panel_service_1.add(lblNewLabel_2);
-
-        textNumber2 = new JTextField();
-        panel_service_1.add(textNumber2);
-        textNumber2.setColumns(10);
 
 
         JComboBox comboOperation = new JComboBox();
@@ -172,11 +168,17 @@ public class MainGUIApplication {
         panel_service_1.add(comboOperation);
 
 
-        JButton btnCalculate = new JButton("Process");
-        btnCalculate.addActionListener(new ActionListener() {
+        JButton btnGetEmployee = new JButton("Find Employee");
+        btnGetEmployee.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                int num1;
 
-                int num1 = Integer.parseInt(textNumber1.getText());
+                try {
+                    num1 = Integer.parseInt(textNumber1.getText());
+                } catch (NumberFormatException ex) {
+                    textResponse.append("reply:\n" + "Enter a valid Employee number!" + "\n");
+                    return;
+                }
                 //int num2 = Integer.parseInt(textNumber2.getText());
 
                 //int index = comboOperation.getSelectedIndex();
@@ -192,9 +194,56 @@ public class MainGUIApplication {
 
             }
         });
-        panel_service_1.add(btnCalculate);
 
-        textResponse = new JTextArea(3, 20);
+        JButton btnGetAllEmployees = new JButton("List All Employees");
+        btnGetAllEmployees.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                textResponse.setText("");
+
+                GetAllEmployeesRequest request = GetAllEmployeesRequest.newBuilder().build();
+
+               /* Iterator<GetEmployeeResponse> responses = blockingStub.getAllEmployees(request);
+                while (responses.hasNext()) {
+                    GetEmployeeResponse response = responses.next();
+                    textResponse.append("reply:\n" + response.getEmployeeDetails() + "\n");
+                }*/
+
+                StreamObserver<GetEmployeeResponse> responseStreamObserver = new StreamObserver<GetEmployeeResponse>() {
+                    int count = 0;
+                    @Override
+                    public void onNext(GetEmployeeResponse response) {
+                        textResponse.append(response.getEmployeeDetails() + "\n");
+                        count += 1;
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException ex) {
+                            // TODO Auto-generated catch block
+                            ex.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                        throwable.printStackTrace();
+                    }
+
+                    @Override
+                    public void onCompleted() {
+                        textResponse.append("Completed listing all " + count + " employees.");
+                        System.out.println("Completed listing all " + count + " employees.");
+                    }
+
+                };
+
+
+                asyncStub.getAllEmployees(request, responseStreamObserver);
+            }
+        });
+
+        panel_service_1.add(btnGetEmployee);
+        panel_service_1.add(btnGetAllEmployees);
+
+        textResponse = new JTextArea(50, 65);
         textResponse.setLineWrap(true);
         textResponse.setWrapStyleWord(true);
 

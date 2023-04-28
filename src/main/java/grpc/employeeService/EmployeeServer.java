@@ -147,4 +147,26 @@ public class EmployeeServer extends EmployeeServiceGrpc.EmployeeServiceImplBase 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
+
+    // GetAllEmployees service, returns a list of all employees
+
+    @Override
+    public void getAllEmployees(GetAllEmployeesRequest request,
+                                StreamObserver<GetEmployeeResponse> responseObserver) {
+        System.out.println("Receiving a request to list all employees.");
+        for (Employee employee : employees) {
+            GetEmployeeResponse response = GetEmployeeResponse.newBuilder().setEmployeeDetails(employee.toString()).build();
+            responseObserver.onNext(response);
+        }
+
+        try {
+            //wait for a second
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        responseObserver.onCompleted();
+    }
 }
