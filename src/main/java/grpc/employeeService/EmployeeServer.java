@@ -169,4 +169,19 @@ public class EmployeeServer extends EmployeeServiceGrpc.EmployeeServiceImplBase 
 
         responseObserver.onCompleted();
     }
+
+    public void addEmployee(AddEmployeeRequest request, StreamObserver<AddEmployeeResponse> responseObserver) {
+        System.out.println("Receiving a request to add an employee.");
+        Employee employee = new Employee(request.getEmployeeNumber(), request.getEmployeeName(), request.getPosition(), request.getSalary());
+        AddEmployeeResponse response = null;
+        try {
+            employees.add(employee);
+            response = AddEmployeeResponse.newBuilder().setSuccess(true).build();
+        } catch (Exception e) {
+            response = AddEmployeeResponse.newBuilder().setSuccess(false).build();
+        }
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
 }
