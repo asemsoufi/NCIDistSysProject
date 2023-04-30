@@ -172,14 +172,40 @@ public class EmployeeServer extends EmployeeServiceGrpc.EmployeeServiceImplBase 
 
     public void addEmployee(AddEmployeeRequest request, StreamObserver<AddEmployeeResponse> responseObserver) {
         System.out.println("Receiving a request to add an employee.");
-        Employee employee = new Employee(request.getEmployeeNumber(), request.getEmployeeName(), request.getPosition(), request.getSalary());
+        int num = -1;
+        String name = null;
+        String position = null;
+        float salary = -1;
+
+        String message = null;
+        boolean result = false;
         AddEmployeeResponse response = null;
+
         try {
-            employees.add(employee);
-            response = AddEmployeeResponse.newBuilder().setSuccess(true).build();
+            num = request.getEmployeeNumber();
+            name = request.getEmployeeName();
+            position = request.getPosition();
+            salary = request.getSalary();
         } catch (Exception e) {
-            response = AddEmployeeResponse.newBuilder().setSuccess(false).build();
+            message = "Error! Invalid input!";
         }
+
+        for (Employee employee : employees) {
+            if (employee.getEmployeeNumber() == num) {
+                message = "Error! Employee number already exists!";
+                response = AddEmployeeResponse.newBuilder().setSuccess(result).setMessage(message).build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+                return;
+            }
+        }
+
+        Employee employee = new Employee(num, name, position, salary);
+        employees.add(employee);
+        result = true;
+        message = name + " added successfully!";
+
+        response = AddEmployeeResponse.newBuilder().setSuccess(result).setMessage(message).build();
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();

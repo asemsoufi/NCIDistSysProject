@@ -1,9 +1,6 @@
 package client;
 
-import grpc.employeeService.EmployeeServiceGrpc;
-import grpc.employeeService.GetAllEmployeesRequest;
-import grpc.employeeService.GetEmployeeRequest;
-import grpc.employeeService.GetEmployeeResponse;
+import grpc.employeeService.*;
 import grpc.orderService.OrderServiceGrpc;
 import grpc.stockService.StockServiceGrpc;
 import io.grpc.ManagedChannel;
@@ -42,6 +39,7 @@ public class MainGUIApplication {
     private JPanel orderPanel;
     private JPanel stockPanel;
     private JTextField textNumber1;
+    private JLabel lblNewLabel_6;
 
 
     public static JTextArea textResponse;
@@ -195,19 +193,6 @@ public class MainGUIApplication {
         panel_service_searchEmployee.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
         panel_service_addEmployee.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
-
-        JPanel panel_service_order = new JPanel();
-        mainTabbedPane.addTab("Orders", null, panel_service_order, null);
-        panel_service_order.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-
-        JPanel panel_service_stock = new JPanel();
-        mainTabbedPane.addTab("Stock", null, panel_service_stock, null);
-        panel_service_stock.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-
-        /*JComboBox comboOperation = new JComboBox();
-        comboOperation.setModel(new DefaultComboBoxModel(new String[]{"Employee Services", "Order Services", "Stock Services"}));
-        panel_service_searchEmployee.add(comboOperation);*/
-
         JLabel lblNewLabel_1 = new JLabel("Employee Number");
         panel_service_searchEmployee.add(lblNewLabel_1);
 
@@ -284,17 +269,64 @@ public class MainGUIApplication {
             }
         });
 
-        JButton btnAddEmployee = new JButton("New Employee");
+        // add an employee number, employee name, position, salary and a submit button
+        JLabel lblNewLabel_2 = new JLabel("Employee Number");
+        panel_service_addEmployee.add(lblNewLabel_2);
+        JTextField numberField = new JTextField();
+        numberField.setColumns(10);
+        panel_service_addEmployee.add(numberField);
+        JLabel lblNewLabel_3 = new JLabel("Employee Name");
+        panel_service_addEmployee.add(lblNewLabel_3);
+        JTextField nameField = new JTextField();
+        nameField.setColumns(10);
+        panel_service_addEmployee.add(nameField);
+        JLabel lblNewLabel_4 = new JLabel("Position");
+        panel_service_addEmployee.add(lblNewLabel_4);
+        JTextField positionField = new JTextField();
+        positionField.setColumns(10);
+        panel_service_addEmployee.add(positionField);
+        JLabel lblNewLabel_5 = new JLabel("Salary");
+        panel_service_addEmployee.add(lblNewLabel_5);
+        JTextField salaryField = new JTextField();
+        salaryField.setColumns(10);
+        panel_service_addEmployee.add(salaryField);
+
+        // add a button to submit request to add new employee
+        JButton btnAddEmployee = new JButton("Submit");
+        panel_service_addEmployee.add(btnAddEmployee);
         btnAddEmployee.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                AddEmployeeGUI dialog = new AddEmployeeGUI();
+                AddEmployeeResponse response = null;
+                try {
+                    int empNumber = Integer.parseInt(numberField.getText());
+                    String name = nameField.getText();
+                    String position = positionField.getText();
+                    int salary = Integer.parseInt(salaryField.getText());
+
+                    AddEmployeeRequest req = AddEmployeeRequest.newBuilder().setEmployeeNumber(empNumber).setEmployeeName(name).setPosition(position).setSalary(salary).build();
+                    response = employeeServiceBlockingStub.addEmployee(req);
+                    if (response.getSuccess()) {
+                        lblNewLabel_6.setText(response.getMessage());
+                        lblNewLabel_6.setForeground(Color.darkGray);
+                    } else {
+                        lblNewLabel_6.setText(response.getMessage());
+                        lblNewLabel_6.setForeground(Color.RED);
+                    }
+                } catch (Exception ex) {
+                    lblNewLabel_6.setText("Error!");
+                    lblNewLabel_6.setForeground(Color.RED);
+                }
             }
         });
+
+        // add a label to display the response
+        lblNewLabel_6 = new JLabel("");
+        panel_service_addEmployee.add(lblNewLabel_6);
 
         panel_service_searchEmployee.add(btnGetEmployee);
         panel_service_searchEmployee.add(btnGetAllEmployees);
         panel_service_searchEmployee.add(btnClearResults);
-        panel_service_searchEmployee.add(btnAddEmployee);
+
 
         textResponse = new JTextArea(23, 65);
         textResponse.setLineWrap(true);
@@ -306,12 +338,15 @@ public class MainGUIApplication {
         //textResponse.setSize(new Dimension(15, 30));
         panel_service_searchEmployee.add(scrollPane);
 
+        JPanel panel_service_order = new JPanel();
+        mainTabbedPane.addTab("Orders", null, panel_service_order, null);
+        panel_service_order.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
-        JPanel panel_service_2 = new JPanel();
-        frame.getContentPane().add(panel_service_2);
 
-        JPanel panel_service_3 = new JPanel();
-        frame.getContentPane().add(panel_service_3);
+        JPanel panel_service_stock = new JPanel();
+        mainTabbedPane.addTab("Stock", null, panel_service_stock, null);
+        panel_service_stock.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+
     }
 
 }

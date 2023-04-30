@@ -22,6 +22,7 @@ message AddEmployeeRequest {
 
 message AddEmployeeResponse {
   bool success = 1;
+  string message = 2;
 }
 
 message GetEmployeeRequest {

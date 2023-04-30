@@ -8,24 +8,39 @@ option java_outer_classname = "StockServiceImpl";
 package stockService;
 
 service StockService {
-  rpc updateProductStock(UpdateProductStockRequest) returns (UpdateProductStockResponse){}
-  rpc getStockLevel(StockLevelRequest) returns (StockLevelResponse) {}
-  rpc updateStockLevel(stream UpdateProductStockRequest) returns (stream UpdateProductStockResponse) {}
+  rpc updateQty(stream UpdateQtyRequest) returns ( stream UpdateQtyResponse){}
+  rpc getProduct(ProductRequest) returns (stream ProductResponse) {}
+  rpc addProduct(AddProductRequest) returns (AddProductResponse) {}
 }
 
-message UpdateProductStockRequest {
+message UpdateQtyRequest {
   int32 stockNumber = 1;
   sint32 qty = 2; // could be a negative number if decreasing quantity
 }
 
-message UpdateProductStockResponse {
+message UpdateQtyResponse {
   bool success = 1;
+  string message = 2;
 }
 
-message StockLevelRequest {
+message ProductRequest {
   int32 stockNumber = 1;
 }
 
-message StockLevelResponse {
-  int32 quantity = 1;
+message ProductResponse {
+  int32 stockNumber = 1;
+  string description = 2;
+  float price = 3;
+  int32 qty = 4;
+}
+
+message AddProductRequest {
+  int32 stockNumber = 1;
+  string description = 2;
+  float price = 3;
+  int32 qty = 4;
+}
+
+message AddProductResponse {
+  bool success = 1;
 }
