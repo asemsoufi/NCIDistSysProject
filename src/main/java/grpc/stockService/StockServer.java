@@ -1,7 +1,10 @@
 package grpc.stockService;
 
+import grpc.employeeService.AddEmployeeResponse;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
+import warehouse.Employee;
 import warehouse.Product;
 import warehouse.Stock;
 
@@ -122,5 +125,89 @@ public class StockServer extends StockServiceGrpc.StockServiceImplBase {
             String[] data = st.split(",");
             stock.addProduct(new Product(Integer.parseInt(data[0]), data[1], Float.parseFloat(data[2]), Integer.parseInt(data[3])));
         }
+    }
+
+    public void getProduct(ProductRequest request,
+                           StreamObserver<ProductResponse> responseObserver) {
+        //System.out.println("Receiving a Product request.");
+        int num = request.getStockNumber();
+        if (num == -1) {
+            System.out.println("Received a request to list all products");
+            for (Product product : stock.getProducts()) {
+                ProductResponse response = ProductResponse.newBuilder().setStockNumber(product.getStockNumber())
+                        .setDescription(product.getDescription()).setPrice(product.getPrice()).
+                        setQty(product.getQuantity()).build();
+                responseObserver.onNext(response);
+            }
+        } else if (num >= 1001 && num <= stock.getProducts().get(stock.getProducts().size() - 1).getStockNumber()) {
+            System.out.println("Received a request for product " + num);
+            Product found = null;
+            for (Product product : stock.getProducts()) {
+                if (product.getStockNumber() == num) {
+                    found = product;
+                    ProductResponse response = ProductResponse.newBuilder().setStockNumber(found.getStockNumber())
+                            .setDescription(found.getDescription()).setPrice(found.getPrice()).
+                            setQty(found.getQuantity()).build();
+                    responseObserver.onNext(response);
+                    break;
+                }
+            }
+        } else {
+            System.out.println("Received a request for invalid product " + num);
+            ProductResponse response = ProductResponse.newBuilder().setStockNumber(-1)
+                    .setDescription("Product not found!").setPrice(-1).
+                    setQty(-1).build();
+            responseObserver.onNext(response);
+        }
+
+        try {
+            //wait for a second
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        responseObserver.onCompleted();
+    }
+
+    public void addProduct(AddProductRequest request, StreamObserver<AddProductResponse> responseObserver) {
+        System.out.println("Receiving a request to add a new product.");
+        int num = -1;
+        String description = null;
+        float price = -1;
+        int qty = -1;
+        String message = null;
+        boolean result = false;
+        AddProductResponse response = null;
+
+        try {
+            num = request.getStockNumber();
+            description = request.getDescription();
+            price = request.getPrice();
+            qty = request.getQty();
+        } catch (Exception e) {
+            message = "Error! Invalid input!";
+        }
+
+        for (Product product : stock.getProducts()) {
+            if (product.getStockNumber() == num) {
+                message = "Error! Product number already exists!";
+                response = AddProductResponse.newBuilder().setSuccess(result).setMessage(message).build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+                return;
+            }
+        }
+
+        Product product = new Product(num, description, price, qty);
+        stock.addProduct(product);
+        result = true;
+        message = product.getDescription() + " added successfully!";
+
+        response = AddProductResponse.newBuilder().setSuccess(result).setMessage(message).build();
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 }

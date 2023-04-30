@@ -2,7 +2,7 @@ package client;
 
 import grpc.employeeService.*;
 import grpc.orderService.OrderServiceGrpc;
-import grpc.stockService.StockServiceGrpc;
+import grpc.stockService.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
@@ -35,14 +35,17 @@ public class MainGUIApplication {
     private JFrame frame;
     private JTabbedPane mainTabbedPane;
     private JTabbedPane employeeTab;
-    private JPanel employeePanel;
-    private JPanel orderPanel;
-    private JPanel stockPanel;
-    private JTextField textNumber1;
-    private JLabel lblNewLabel_6;
+    private JTabbedPane orderTab;
+    private JTabbedPane stockTab;
+    private JTextField employeeNumber;
+    private JLabel lblAddEmployee;
+    private JLabel lblAddProduct;
+    private JTextField stockNumber;
 
 
-    public static JTextArea textResponse;
+    public static JTextArea employeeTextArea;
+    public static JTextArea orderTextArea;
+    public static JTextArea stockTextArea;
 
     /**
      * Launch the application.
@@ -185,7 +188,7 @@ public class MainGUIApplication {
         employeeTab = new JTabbedPane(JTabbedPane.TOP);
         mainTabbedPane.addTab("Employees", null, employeeTab, null);
 
-        // Employee tab
+        // Employee tabs
         JPanel panel_service_searchEmployee = new JPanel();
         JPanel panel_service_addEmployee = new JPanel();
         employeeTab.addTab("Search Employees", null, panel_service_searchEmployee, null);
@@ -196,31 +199,31 @@ public class MainGUIApplication {
         JLabel lblNewLabel_1 = new JLabel("Employee Number");
         panel_service_searchEmployee.add(lblNewLabel_1);
 
-        textNumber1 = new JTextField();
-        panel_service_searchEmployee.add(textNumber1);
-        textNumber1.setColumns(10);
+        employeeNumber = new JTextField();
+        panel_service_searchEmployee.add(employeeNumber);
+        employeeNumber.setColumns(10);
 
 
 
         JButton btnGetEmployee = new JButton("Find Employee");
         btnGetEmployee.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                int num1;
+                int num;
 
                 try {
-                    num1 = Integer.parseInt(textNumber1.getText());
+                    num = Integer.parseInt(employeeNumber.getText());
                 } catch (NumberFormatException ex) {
-                    textResponse.append("Enter a valid Employee number!" + "\n");
+                    employeeTextArea.append("Enter a valid Employee number!" + "\n");
                     return;
                 }
 
-                GetEmployeeRequest req = GetEmployeeRequest.newBuilder().setEmployeeNumber(num1).build();
+                GetEmployeeRequest req = GetEmployeeRequest.newBuilder().setEmployeeNumber(num).build();
                 try {
                     GetEmployeeResponse response = employeeServiceBlockingStub.getEmployee(req);
-                    textResponse.append(response.getEmployeeDetails() + "\n");
+                    employeeTextArea.append(response.getEmployeeDetails() + "\n");
                 }
                 catch (Exception ex) {
-                    textResponse.append("Server not running!\n");
+                    employeeTextArea.append("Server not running!\n");
                 }
 
             }
@@ -229,17 +232,17 @@ public class MainGUIApplication {
         JButton btnGetAllEmployees = new JButton("List All Employees");
         btnGetAllEmployees.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                textResponse.setText("");
+                employeeTextArea.setText("");
 
                 GetAllEmployeesRequest request = GetAllEmployeesRequest.newBuilder().build();
                 StreamObserver<GetEmployeeResponse> responseStreamObserver = new StreamObserver<GetEmployeeResponse>() {
                     int count = 0;
                     @Override
                     public void onNext(GetEmployeeResponse response) {
-                        textResponse.append(response.getEmployeeDetails() + "\n");
+                        employeeTextArea.append(response.getEmployeeDetails() + "\n");
                         count += 1;
                         try {
-                            Thread.sleep(200);
+                            Thread.sleep(100);
                         } catch (InterruptedException ex) {
                             // TODO Auto-generated catch block
                             ex.printStackTrace();
@@ -253,7 +256,7 @@ public class MainGUIApplication {
 
                     @Override
                     public void onCompleted() {
-                        textResponse.append("Completed listing all " + count + " employees.");
+                        employeeTextArea.append("Completed listing all " + count + " employees.\n");
                     }
 
                 };
@@ -265,7 +268,7 @@ public class MainGUIApplication {
         JButton btnClearResults = new JButton("Clear Results");
         btnClearResults.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                textResponse.setText("");
+                employeeTextArea.setText("");
             }
         });
 
@@ -306,45 +309,186 @@ public class MainGUIApplication {
                     AddEmployeeRequest req = AddEmployeeRequest.newBuilder().setEmployeeNumber(empNumber).setEmployeeName(name).setPosition(position).setSalary(salary).build();
                     response = employeeServiceBlockingStub.addEmployee(req);
                     if (response.getSuccess()) {
-                        lblNewLabel_6.setText(response.getMessage());
-                        lblNewLabel_6.setForeground(Color.darkGray);
+                        lblAddEmployee.setText(response.getMessage());
+                        lblAddEmployee.setForeground(Color.darkGray);
                     } else {
-                        lblNewLabel_6.setText(response.getMessage());
-                        lblNewLabel_6.setForeground(Color.RED);
+                        lblAddEmployee.setText(response.getMessage());
+                        lblAddEmployee.setForeground(Color.RED);
                     }
                 } catch (Exception ex) {
-                    lblNewLabel_6.setText("Error!");
-                    lblNewLabel_6.setForeground(Color.RED);
+                    lblAddEmployee.setText("Error!");
+                    lblAddEmployee.setForeground(Color.RED);
                 }
             }
         });
 
         // add a label to display the response
-        lblNewLabel_6 = new JLabel("");
-        panel_service_addEmployee.add(lblNewLabel_6);
+        lblAddEmployee = new JLabel("");
+        panel_service_addEmployee.add(lblAddEmployee);
 
         panel_service_searchEmployee.add(btnGetEmployee);
         panel_service_searchEmployee.add(btnGetAllEmployees);
         panel_service_searchEmployee.add(btnClearResults);
 
 
-        textResponse = new JTextArea(23, 65);
-        textResponse.setLineWrap(true);
-        textResponse.setWrapStyleWord(true);
+        employeeTextArea = new JTextArea(23, 65);
+        employeeTextArea.setLineWrap(true);
+        employeeTextArea.setWrapStyleWord(true);
 
 
-        JScrollPane scrollPane = new JScrollPane(textResponse);
+        JScrollPane scrollPane = new JScrollPane(employeeTextArea);
 
         //textResponse.setSize(new Dimension(15, 30));
         panel_service_searchEmployee.add(scrollPane);
 
-        JPanel panel_service_order = new JPanel();
-        mainTabbedPane.addTab("Orders", null, panel_service_order, null);
-        panel_service_order.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        stockTab = new JTabbedPane(JTabbedPane.TOP);
+        mainTabbedPane.addTab("Stock", null, stockTab, null);
+
+        // Employee tabs
+        JPanel panel_service_searchStock = new JPanel();
+        JPanel panel_service_addProduct = new JPanel();
+        stockTab.addTab("Search Stock", null, panel_service_searchStock, null);
+        stockTab.addTab("Add Product", null, panel_service_addProduct, null);
+        panel_service_searchStock.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        panel_service_addProduct.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+
+        JLabel lblNewLabel_searchStock = new JLabel("Stock Number");
+        panel_service_searchStock.add(lblNewLabel_searchStock);
+
+        stockNumber = new JTextField();
+        panel_service_searchStock.add(stockNumber);
+        stockNumber.setColumns(10);
+
+
+
+        JButton btnGetProduct = new JButton("Find Product");
+        btnGetProduct.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                stockTextArea.setText("");
+                int num = -1;
+                if (stockNumber.getText().length() > 0 ) {
+                    try {
+                        num = Integer.parseInt(stockNumber.getText());
+                    } catch (Exception ex) {
+                        stockTextArea.setText("Invalid stock number!");
+                    }
+                }
+
+                ProductRequest request = ProductRequest.newBuilder().setStockNumber(num).build();
+                StreamObserver<ProductResponse> responseStreamObserver = new StreamObserver<ProductResponse>() {
+                    @Override
+                    public void onNext(ProductResponse response) {
+                        if (response.getStockNumber() != -1) {
+                            stockTextArea.append("Product{no." + response.getStockNumber() + ", " + response.getDescription() +
+                                    ", price:" + response.getPrice() + ", qty:" + response.getQty() + "\n");
+                        } else {
+                            stockTextArea.append(response.getDescription()+ "\n");
+                        }
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException ex) {
+                            // TODO Auto-generated catch block
+                            ex.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                        throwable.printStackTrace();
+                    }
+
+                    @Override
+                    public void onCompleted() {}
+
+                };
+
+                stockServiceAsyncStub.getProduct(request, responseStreamObserver);
+
+            }
+        });
+
+        JButton btnClearStockResults = new JButton("Clear Results");
+        btnClearStockResults.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                stockTextArea.setText("");
+            }
+        });
+
+        // add an employee number, employee name, position, salary and a submit button
+        JLabel lblProductNumber = new JLabel("Product Number");
+        panel_service_addProduct.add(lblProductNumber);
+        JTextField productNumberField = new JTextField();
+        productNumberField.setColumns(6);
+        panel_service_addProduct.add(productNumberField);
+
+        JLabel lblDescription = new JLabel("Description");
+        panel_service_addProduct.add(lblDescription);
+        JTextField descriptionField = new JTextField();
+        descriptionField.setColumns(14);
+        panel_service_addProduct.add(descriptionField);
+
+        JLabel lblPrice = new JLabel("Price");
+        panel_service_addProduct.add(lblPrice);
+        JTextField priceField = new JTextField();
+        priceField.setColumns(6);
+        panel_service_addProduct.add(priceField);
+
+        JLabel lblQty = new JLabel("Quantity");
+        panel_service_addProduct.add(lblQty);
+        JTextField qtyField = new JTextField();
+        qtyField.setColumns(4);
+        panel_service_addProduct.add(qtyField);
+
+        // add a label to display the response
+        lblAddProduct = new JLabel("");
+        panel_service_addProduct.add(lblAddProduct);
+
+        // add a button to submit request to add new employee
+        JButton btnAddProduct = new JButton("Submit");
+        panel_service_addProduct.add(btnAddProduct);
+        btnAddProduct.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                AddProductResponse response = null;
+                try {
+                    int prodNumber = Integer.parseInt(productNumberField.getText());
+                    String descr = descriptionField.getText();
+                    float price = Float.parseFloat(priceField.getText());
+                    int qty = Integer.parseInt(qtyField.getText());
+
+                    AddProductRequest req = AddProductRequest.newBuilder().setStockNumber(prodNumber).setDescription(descr).setPrice(price).setQty(qty).build();
+                    response = stockServiceBlockingStub.addProduct(req);
+                    if (response.getSuccess()) {
+                        lblAddProduct.setText(response.getMessage());
+                        lblAddProduct.setForeground(Color.darkGray);
+                    } else {
+                        lblAddProduct.setText(response.getMessage());
+                        lblAddProduct.setForeground(Color.RED);
+                    }
+                } catch (Exception ex) {
+                    lblAddProduct.setText("Error!");
+                    lblAddProduct.setForeground(Color.RED);
+                }
+            }
+        });
+
+
+        panel_service_searchStock.add(btnGetProduct);
+        panel_service_searchStock.add(btnClearStockResults);
+
+
+        stockTextArea = new JTextArea(23, 65);
+        stockTextArea.setLineWrap(true);
+        stockTextArea.setWrapStyleWord(true);
+
+
+        JScrollPane scrollPaneStock = new JScrollPane(stockTextArea);
+
+        //textResponse.setSize(new Dimension(15, 30));
+        panel_service_searchStock.add(scrollPaneStock);
 
 
         JPanel panel_service_stock = new JPanel();
-        mainTabbedPane.addTab("Stock", null, panel_service_stock, null);
+        mainTabbedPane.addTab("Order", null, panel_service_stock, null);
         panel_service_stock.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
     }
