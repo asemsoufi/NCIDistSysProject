@@ -1,7 +1,11 @@
 package grpc.orderService;
 
+import grpc.stockService.ProductRequest;
+import grpc.stockService.ProductResponse;
+import grpc.stockService.StockServiceGrpc;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
 import warehouse.Order;
 import warehouse.Product;
 import warehouse.Stock;
@@ -15,13 +19,17 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Properties;
 import java.util.Scanner;
 
 public class OrderServer extends OrderServiceGrpc.OrderServiceImplBase {
     private static ArrayList<Order> orders;
     private static Stock stock;
+    private static StockServiceGrpc.StockServiceStub stockServiceAsyncStub = null;
 
     public static void main(String[] args) throws FileNotFoundException {
         // load stock data with all products
@@ -171,6 +179,135 @@ public class OrderServer extends OrderServiceGrpc.OrderServiceImplBase {
         }
 
         sc.close();  //closes the scanner
+    }
+
+    // implement get total sales method to print the total of all orders
+    public void getTotalSales(TotalSalesRequest request, StreamObserver<TotalSalesResponse> responseObserver) {
+        System.out.println("Receiving total sales request...");
+        float totalSales = 0;
+        for (Order order : orders) {
+            totalSales += order.getTotalValue();
+        }
+        //System.out.println("Total Order: " + totalSales);
+        TotalSalesResponse response = TotalSalesResponse.newBuilder().setSalesTotal(totalSales).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    public void getOrderDetails(GetOrderRequest request, StreamObserver<GetOrderResponse> responseObserver) {
+        int num = request.getOrderNumber();
+        if (num == -1) {
+            System.out.println("Received a request to list all orders");
+            for (Order order : orders) {
+                GetOrderResponse response = GetOrderResponse.newBuilder().setOrderDetails(order.toString()).build();
+                responseObserver.onNext(response);
+            }
+        } else if (num > 0) {
+            System.out.println("Received a request for product " + num);
+            Order found = null;
+            for (Order order : orders) {
+                if (order.getOrderNumber() == num) {
+                    found = order;
+                    GetOrderResponse response = GetOrderResponse.newBuilder().setOrderDetails(found.toString()).build();
+                    responseObserver.onNext(response);
+                    return;
+                }
+            }
+            // if order not found
+            GetOrderResponse response = GetOrderResponse.newBuilder().setOrderDetails("Order not found!").build();
+            responseObserver.onNext(response);
+        } else {
+            System.out.println("Received a request for invalid order " + num);
+            GetOrderResponse response = GetOrderResponse.newBuilder().setOrderDetails("Order not found!").build();
+            responseObserver.onNext(response);
+        }
+
+        try {
+            //wait for a second
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        responseObserver.onCompleted();
+    }
+
+    public void cancelOrder(CancelOrderRequest request, StreamObserver<CancelOrderResponse> responseObserver) {
+        int num = request.getOrderNumber();
+        if (num == -1) {
+            System.out.println("Missing order number!");
+            CancelOrderResponse response = CancelOrderResponse.newBuilder().setSuccess(false).build();
+            responseObserver.onNext(response);
+        } else if (num > 0) {
+            System.out.println("Received a request to cancel order " + num);
+            Order found = null;
+            for (Order order : orders) {
+                if (order.getOrderNumber() == num) {
+                    orders.remove(order);
+                    CancelOrderResponse response = CancelOrderResponse.newBuilder().setSuccess(true).build();
+                    responseObserver.onNext(response);
+                    break;
+                }
+            }
+        } else {
+            System.out.println("Received a cancel request for an invalid order " + num);
+            CancelOrderResponse response = CancelOrderResponse.newBuilder().setSuccess(false).build();
+            responseObserver.onNext(response);
+        }
+
+        try {
+            //wait for a second
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        responseObserver.onCompleted();
+    }
+
+    public StreamObserver<PlaceOrderRequest> placeOrder (StreamObserver<PlaceOrderResponse> responseObserver){
+        int orderNumber = orders.get(orders.size() - 1).getOrderNumber() + 1;
+        // add a new order with order number alst + 1, and simple date dd/mm/yyyy
+        Order order = new Order(orderNumber, new SimpleDateFormat("dd/MM/yyyy").format(new Date()));
+        return new StreamObserver<PlaceOrderRequest>() {
+            public void onNext(PlaceOrderRequest request) {
+                int productNum = request.getStockNumber();
+                int qtyToOrder = request.getQuantity();
+                /*****/
+                ProductRequest productRequest = ProductRequest.newBuilder().setStockNumber(productNum).build();
+                StreamObserver<ProductResponse> productResponse = new StreamObserver<ProductResponse>() {
+                    @Override
+                    public void onNext(ProductResponse productResponse) {
+                        Product product = new Product(productResponse.getStockNumber(), productResponse.getDescription(), productResponse.getPrice(), productResponse.getQty());
+                        order.addItem(product, qtyToOrder);
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                        throwable.printStackTrace();
+                    }
+
+                    @Override
+                    public void onCompleted() {}
+
+                };
+                stockServiceAsyncStub.getProduct(productRequest, productResponse);
+                /****/
+            }
+
+            public void onCompleted() {
+                PlaceOrderResponse response = PlaceOrderResponse.newBuilder().setOrderNumber(orderNumber).build();
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                // TODO Auto-generated method stub
+
+            }
+        };
+
     }
 
 }

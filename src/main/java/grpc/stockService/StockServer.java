@@ -210,4 +210,41 @@ public class StockServer extends StockServiceGrpc.StockServiceImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
+
+    public StreamObserver<UpdateQtyRequest> updateQty (StreamObserver<UpdateQtyResponse> responseObserver){
+        return new StreamObserver<UpdateQtyRequest>() {
+            public void onNext(UpdateQtyRequest request) {
+                int stockNumber = request.getStockNumber();
+                int qty = request.getQty();
+                // look for product and update quantity as needed
+                for (Product product : stock.getProducts()) {
+                    if (product.getStockNumber() == stockNumber) {
+                        if (product.getQuantity() >= qty) {
+                            product.quantity -= qty;
+                            // send reply with the update
+                            UpdateQtyResponse reply = UpdateQtyResponse.newBuilder().setSuccess(true).setMessage("Qty updated! " + product).build();
+                            responseObserver.onNext(reply);
+                        } else {
+                            UpdateQtyResponse reply = UpdateQtyResponse.newBuilder().setSuccess(false).setMessage("Not enough stock!").build();
+                            responseObserver.onNext(reply);
+                        }
+                        return;
+                    }
+                }
+                UpdateQtyResponse reply = UpdateQtyResponse.newBuilder().setSuccess(false).setMessage("No such product in stock!").build();
+                responseObserver.onNext(reply);
+            }
+
+            public void onCompleted() {
+                responseObserver.onCompleted();
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                // TODO Auto-generated method stub
+
+            }
+        };
+
+    }
 }

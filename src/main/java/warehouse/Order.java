@@ -14,12 +14,12 @@ public class Order implements Comparable<Object> {
         this.items = new ArrayList<>();
     }
 
-    private class OrderItem {
-        Product product;
-        int quantity;
+    public static class OrderItem {
+        public Product product;
+        public int quantity;
         float value;
 
-        OrderItem(Product product, int qty) {
+        public OrderItem(Product product, int qty) {
             this.product = product;
             this.quantity = qty;
             this.value = product.getPrice() * quantity;

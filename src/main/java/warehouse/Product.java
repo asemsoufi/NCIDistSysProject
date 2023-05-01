@@ -9,7 +9,7 @@ public class Product implements Comparable<Object> {
     private final int stockNumber;
     private final String description;
     private final float price;
-    private final int quantity;
+    public int quantity;
 
     public Product(int stockNumber, String description, float price, int qty) {
         this.stockNumber = stockNumber;

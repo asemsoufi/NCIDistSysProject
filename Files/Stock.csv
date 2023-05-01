@@ -1,16 +1,16 @@
 stock_no,product,price,quantity
-1001,Writing Pad,10.95,230
-1002,Sports Shoes,99.95,260
-1003,Outdoors Tent,136.50,232
-1004,Clothing,24.65,147
-1005,Jewelry,350.20,179
-1006,Accessories,81.70,264
-1007,Desk,280.60,284
-1008,Microwave,65.60,185
-1009,Laptop,700.50,192
-1010,Tools,25.90,288
-1011,Monitor,120.00,30
-1012,TV,550.00,70
+1001,Writing Pad,10.95,100
+1002,Sports Shoes,99.95,100
+1003,Outdoors Tent,136.50,100
+1004,Clothing,24.65,100
+1005,Jewelry,350.20,100
+1006,Accessories,81.70,100
+1007,Desk,280.60,100
+1008,Microwave,65.60,100
+1009,Laptop,700.50,100
+1010,Tools,25.90,100
+1011,Monitor,120.00,100
+1012,TV,550.00,100
 1013,Iron,30.95,100
-1014,Tablet,450.00,50
-1015,Phone,800.00,30
+1014,Tablet,450.00,100
+1015,Phone,800.00,100

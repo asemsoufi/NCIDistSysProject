@@ -10,9 +10,8 @@ package orderService;
 service OrderService {
   rpc placeOrder(stream PlaceOrderRequest) returns (PlaceOrderResponse) {}
   rpc cancelOrder(CancelOrderRequest) returns (CancelOrderResponse) {}
-  rpc getOrderDetails(GetOrderRequest) returns (GetOrderResponse) {}
+  rpc getOrderDetails(GetOrderRequest) returns (stream GetOrderResponse) {}
   rpc getTotalSales(TotalSalesRequest) returns (TotalSalesResponse) {}
-  rpc getAllOrders(GetAllOrdersRequest) returns (stream GetOrderResponse) {}
 }
 
 message PlaceOrderRequest {
@@ -33,7 +32,7 @@ message CancelOrderResponse {
 }
 
 message GetOrderRequest {
-  int32 oredrNumber = 1;
+  int32 orderNumber = 1;
 }
 
 message GetOrderResponse {
@@ -45,5 +44,3 @@ message TotalSalesRequest{}
 message TotalSalesResponse{
   float salesTotal = 1;
 }
-
-message GetAllOrdersRequest {}
