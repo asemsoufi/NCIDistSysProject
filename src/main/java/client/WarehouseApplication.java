@@ -678,6 +678,8 @@ public class WarehouseApplication {
                 productQtyField.setEnabled(true);
                 productToOrder.setEnabled(true);
                 btnAddToOrder.setEnabled(true);
+                productQtyField.setText("");
+                productToOrder.setText("");
                 // delete all entries in orderItems ArrayList
                 orderItems.clear();
             }
