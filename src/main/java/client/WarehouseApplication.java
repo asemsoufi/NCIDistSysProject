@@ -28,6 +28,7 @@ public class WarehouseApplication {
     private static StockServiceGrpc.StockServiceStub stockServiceAsyncStub;
 
     private static ArrayList<Order.OrderItem> orderItems = new ArrayList<>();
+    private static int num;
 
 
     private JFrame frame;
@@ -508,8 +509,9 @@ public class WarehouseApplication {
 
 
         JButton btnGetOrder = new JButton("List Orders");
+        num = -1;
         btnGetOrder.addActionListener(new ActionListener() {
-            int num = -1;
+
             public void actionPerformed(ActionEvent e) {
                 orderTextArea.setText("");
                 orderTextArea.setFont(orderTextArea.getFont().deriveFont(14f));
@@ -536,7 +538,7 @@ public class WarehouseApplication {
                             btnCancelOrder.setEnabled(false);
                         }
 
-                        waitFor(100);
+                        //waitFor(100);
                     }
                     @Override
                     public void onError(Throwable throwable) {
@@ -576,12 +578,14 @@ public class WarehouseApplication {
                     orderNumber.setText("");
                 }
                 btnCancelOrder.setEnabled(false);
+                num = -1;
             }
         });
 
         JButton btnGetTotalSales = new JButton("Show Total Sales");
         btnGetTotalSales.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                orderTextArea.setText("");
 
                 TotalSalesRequest req = TotalSalesRequest.newBuilder().build();
 
@@ -596,6 +600,8 @@ public class WarehouseApplication {
             public void actionPerformed(ActionEvent e) {
                 orderTextArea.setText("");
                 orderNumber.setText("");
+                btnCancelOrder.setEnabled(false);
+                num = -1;
             }
         });
 
@@ -760,20 +766,21 @@ public class WarehouseApplication {
     public static void updateStock(JTextArea textArea) {
         StreamObserver<UpdateQtyResponse> responseObserver =  new StreamObserver<UpdateQtyResponse>() {
             public void onNext(UpdateQtyResponse value) {
+                waitFor(2000);
                 textArea.append(value.getMessage() + "\n");
                 // some slow motion
-                waitFor(1000);
+                waitFor(3000);
             }
             public void onCompleted() {
                 textArea.append("\nAll relevant stock levels updated successfully!\n");
-                waitFor(1000);
+                waitFor(3000);
 
                 textArea.append("\nNow placing your order");
                 for (int i = 0; i < 20; i++){
                     textArea.append(".");
                     waitFor(200);
                 }
-                textArea.append("\n");
+                textArea.append("\n\n");
 
                 // print new order details
                 placeOrder(placeOrderTextArea);
@@ -788,9 +795,14 @@ public class WarehouseApplication {
 
         StreamObserver<UpdateQtyRequest> requestObserver =  stockServiceAsyncStub.updateQty(responseObserver);
 
-        textArea.append("\nRequesting stock update...\n\n");
+        textArea.append("\nRequesting stock update");
+        for (int i = 0; i < 10; i++){
+            textArea.append(".");
+            waitFor(200);
+        }
+        textArea.append("\n\n");
 
-        waitFor(1000);
+        //waitFor(1000);
 
         try {
             for (Order.OrderItem oi : orderItems) {
@@ -806,7 +818,7 @@ public class WarehouseApplication {
 
     public static void waitFor(int ms) {
         try {
-            //wait for a second
+            //wait for a ms milliseconds
             Thread.sleep(ms);
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
