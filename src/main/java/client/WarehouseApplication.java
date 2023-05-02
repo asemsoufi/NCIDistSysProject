@@ -374,6 +374,8 @@ public class WarehouseApplication {
                         num = Integer.parseInt(stockNumber.getText());
                     } catch (Exception ex) {
                         stockTextArea.setText("Invalid stock number!");
+                        stockNumber.setText("");
+                        return;
                     }
                 }
 
@@ -523,6 +525,8 @@ public class WarehouseApplication {
                         btnCancelOrder.setEnabled(true);
                     } catch (Exception ex) {
                         orderTextArea.setText("Invalid order number!");
+                        orderNumber.setText("");
+                        return;
                     }
                 }
 
@@ -629,8 +633,18 @@ public class WarehouseApplication {
                 placeOrderTextArea.setText("");
                 placeOrderTextArea.setFont(placeOrderTextArea.getFont().deriveFont(14f));
                 lblStockAvailability.setText("");
-                int productNum = Integer.parseInt(productToOrder.getText());
-                int qtyToOrder = Integer.parseInt(productQtyField.getText());
+                int productNum;
+                int qtyToOrder;
+                try {
+                    productNum = Integer.parseInt(productToOrder.getText());
+                    qtyToOrder = Integer.parseInt(productQtyField.getText());
+                } catch (Exception ex) {
+                    placeOrderTextArea.setText("Invalid number format!");
+                    productToOrder.setText("");
+                    productQtyField.setText("");
+                    return;
+                }
+
                 // check if product is in stock
                 ProductRequest request = ProductRequest.newBuilder().setStockNumber(productNum).build();
                 StreamObserver<ProductResponse> responseStreamObserver = new StreamObserver<ProductResponse>() {

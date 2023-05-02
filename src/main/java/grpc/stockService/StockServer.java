@@ -183,6 +183,13 @@ public class StockServer extends StockServiceGrpc.StockServiceImplBase {
 
         try {
             num = request.getStockNumber();
+            if (num < stock.getProducts().get(0).getStockNumber()) {
+                message = "Error! Invalid input!";
+                response = AddProductResponse.newBuilder().setSuccess(result).setMessage(message).build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+                return;
+            }
             description = request.getDescription();
             price = request.getPrice();
             qty = request.getQty();
