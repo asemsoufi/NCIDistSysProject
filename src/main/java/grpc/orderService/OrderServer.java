@@ -1,8 +1,5 @@
 package grpc.orderService;
 
-import grpc.stockService.ProductRequest;
-import grpc.stockService.ProductResponse;
-import grpc.stockService.StockServiceGrpc;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -19,7 +16,6 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,7 +25,6 @@ import java.util.Scanner;
 public class OrderServer extends OrderServiceGrpc.OrderServiceImplBase {
     private static ArrayList<Order> orders;
     private static Stock stock;
-    private static StockServiceGrpc.StockServiceStub stockServiceAsyncStub = null;
 
     public static void main(String[] args) throws FileNotFoundException {
         // load stock data with all products
@@ -203,7 +198,7 @@ public class OrderServer extends OrderServiceGrpc.OrderServiceImplBase {
                 responseObserver.onNext(response);
             }
         } else if (num > 0) {
-            System.out.println("Received a request for product " + num);
+            System.out.println("Received a request for order " + num);
             Order found = null;
             for (Order order : orders) {
                 if (order.getOrderNumber() == num) {
@@ -267,38 +262,26 @@ public class OrderServer extends OrderServiceGrpc.OrderServiceImplBase {
         responseObserver.onCompleted();
     }
 
-    public StreamObserver<PlaceOrderRequest> placeOrder (StreamObserver<PlaceOrderResponse> responseObserver){
+    public StreamObserver<PlaceOrderRequest> placeOrder (StreamObserver<GetOrderResponse> responseObserver){
         int orderNumber = orders.get(orders.size() - 1).getOrderNumber() + 1;
         // add a new order with order number alst + 1, and simple date dd/mm/yyyy
         Order order = new Order(orderNumber, new SimpleDateFormat("dd/MM/yyyy").format(new Date()));
         return new StreamObserver<PlaceOrderRequest>() {
             public void onNext(PlaceOrderRequest request) {
                 int productNum = request.getStockNumber();
-                int qtyToOrder = request.getQuantity();
-                /*****/
-                ProductRequest productRequest = ProductRequest.newBuilder().setStockNumber(productNum).build();
-                StreamObserver<ProductResponse> productResponse = new StreamObserver<ProductResponse>() {
-                    @Override
-                    public void onNext(ProductResponse productResponse) {
-                        Product product = new Product(productResponse.getStockNumber(), productResponse.getDescription(), productResponse.getPrice(), productResponse.getQty());
-                        order.addItem(product, qtyToOrder);
-                    }
-
-                    @Override
-                    public void onError(Throwable throwable) {
-                        throwable.printStackTrace();
-                    }
-
-                    @Override
-                    public void onCompleted() {}
-
-                };
-                stockServiceAsyncStub.getProduct(productRequest, productResponse);
-                /****/
+                String productDescription = request.getProdDescription();
+                float price = request.getProdPrice();
+                int stockQty = request.getProdQty();
+                int qtyToOrder = request.getOrderedQty();
+                Product product = new Product(productNum, productDescription, price, stockQty);
+                order.addItem(product, qtyToOrder);
             }
 
             public void onCompleted() {
-                PlaceOrderResponse response = PlaceOrderResponse.newBuilder().setOrderNumber(orderNumber).build();
+                orders.add(order);
+                GetOrderResponse response = GetOrderResponse.newBuilder().setOrderDetails(order.toString()).build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
             }
 
             @Override

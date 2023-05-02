@@ -8,14 +8,11 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import warehouse.Order;
 import warehouse.Product;
-
-import javax.jmdns.ServiceInfo;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Random;
 
 
 public class MainGUIApplication {
@@ -34,15 +31,11 @@ public class MainGUIApplication {
 
 
     private JFrame frame;
-    private JTabbedPane mainTabbedPane;
-    private JTabbedPane employeeTab;
-    private JTabbedPane orderTab;
-    private JTabbedPane stockTab;
     private JTextField employeeNumber;
     private JLabel lblAddEmployee;
     private JLabel lblAddProduct;
-    private JLabel lblPlaceOrder;
     private JButton btnPlaceOrder;
+    private JButton btnNewOrder;
     private JLabel lblStockAvailability;
     private JTextField stockNumber;
     private JTextField orderNumber;
@@ -192,10 +185,10 @@ public class MainGUIApplication {
         // show frame in the center of the display window
         frame.setLocationRelativeTo(null);
         // Main tabbed pane
-        mainTabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        JTabbedPane mainTabbedPane = new JTabbedPane(JTabbedPane.TOP);
         frame.getContentPane().add(mainTabbedPane);
 
-        employeeTab = new JTabbedPane(JTabbedPane.TOP);
+        JTabbedPane employeeTab = new JTabbedPane(JTabbedPane.TOP);
         mainTabbedPane.addTab("Employees", null, employeeTab, null);
 
         // Employee tabs
@@ -243,6 +236,7 @@ public class MainGUIApplication {
         btnGetAllEmployees.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 employeeTextArea.setText("");
+                employeeNumber.setText("");
 
                 GetAllEmployeesRequest request = GetAllEmployeesRequest.newBuilder().build();
                 StreamObserver<GetEmployeeResponse> responseStreamObserver = new StreamObserver<GetEmployeeResponse>() {
@@ -251,12 +245,7 @@ public class MainGUIApplication {
                     public void onNext(GetEmployeeResponse response) {
                         employeeTextArea.append(response.getEmployeeDetails() + "\n");
                         count += 1;
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException ex) {
-                            // TODO Auto-generated catch block
-                            ex.printStackTrace();
-                        }
+                        waitFor(100);
                     }
 
                     @Override
@@ -279,6 +268,7 @@ public class MainGUIApplication {
         btnClearResults.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 employeeTextArea.setText("");
+                employeeNumber.setText("");
             }
         });
 
@@ -353,7 +343,7 @@ public class MainGUIApplication {
         //textResponse.setSize(new Dimension(15, 30));
         panel_service_searchEmployee.add(scrollPane);
 
-        stockTab = new JTabbedPane(JTabbedPane.TOP);
+        JTabbedPane stockTab = new JTabbedPane(JTabbedPane.TOP);
         mainTabbedPane.addTab("Stock", null, stockTab, null);
 
         // Employee tabs
@@ -396,12 +386,7 @@ public class MainGUIApplication {
                         } else {
                             stockTextArea.append(response.getDescription()+ "\n");
                         }
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException ex) {
-                            // TODO Auto-generated catch block
-                            ex.printStackTrace();
-                        }
+                        waitFor(100);
                     }
 
                     @Override
@@ -423,6 +408,7 @@ public class MainGUIApplication {
         btnClearStockResults.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 stockTextArea.setText("");
+                stockNumber.setText("");
             }
         });
 
@@ -501,7 +487,7 @@ public class MainGUIApplication {
 
         /***********************************************************************************/
 
-        orderTab = new JTabbedPane(JTabbedPane.TOP);
+        JTabbedPane orderTab = new JTabbedPane(JTabbedPane.TOP);
         mainTabbedPane.addTab("Orders", null, orderTab, null);
 
         // Employee tabs
@@ -546,13 +532,11 @@ public class MainGUIApplication {
                         orderTextArea.append(response.getOrderDetails()+ "\n");
                         orderTextArea.append("---------------------------------------------------------------------" +
                                 "-------------\n");
-
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException ex) {
-                            // TODO Auto-generated catch block
-                            ex.printStackTrace();
+                        if (response.getOrderDetails().equals("Order not found!")){
+                            btnCancelOrder.setEnabled(false);
                         }
+
+                        waitFor(100);
                     }
                     @Override
                     public void onError(Throwable throwable) {
@@ -591,6 +575,7 @@ public class MainGUIApplication {
                     orderTextArea.append("Error cancelling order!\n");
                     orderNumber.setText("");
                 }
+                btnCancelOrder.setEnabled(false);
             }
         });
 
@@ -610,6 +595,7 @@ public class MainGUIApplication {
         btnClearOrderResults.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 orderTextArea.setText("");
+                orderNumber.setText("");
             }
         });
 
@@ -635,6 +621,8 @@ public class MainGUIApplication {
         btnAddToOrder.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 placeOrderTextArea.setText("");
+                placeOrderTextArea.setFont(placeOrderTextArea.getFont().deriveFont(14f));
+                lblStockAvailability.setText("");
                 int productNum = Integer.parseInt(productToOrder.getText());
                 int qtyToOrder = Integer.parseInt(productQtyField.getText());
                 // check if product is in stock
@@ -649,34 +637,31 @@ public class MainGUIApplication {
                             // if already in shopping cart then change quantity or remove product as needed
                             for (Order.OrderItem oi : orderItems) {
                                 if (oi.product.getStockNumber() == product.getStockNumber()) {
-                                    System.out.println("item already in shopping cart");
+                                    //System.out.println("item already in shopping cart");
                                     oi.quantity += qtyToOrder;
-                                    System.out.println("New quantity " + oi.quantity);
+                                    //System.out.println("New quantity " + oi.quantity);
                                     if (oi.quantity <= 0) {
                                         orderItems.remove(oi);
                                     }
                                     return;
                                 }
                             }
-                            System.out.println("creating new order item");
+                            //System.out.println("creating new order item");
                             Order.OrderItem item = new Order.OrderItem(product, qtyToOrder);
-                            System.out.println("adding it to list");
+                            //System.out.println("adding it to list");
                             orderItems.add(item);
                             btnPlaceOrder.setEnabled(true);
 
-                        } else if (response.getQty() < qtyToOrder) {
-                            lblStockAvailability.setText("Only " + response.getQty() + " left!");
-                            lblStockAvailability.setForeground(Color.RED);
+                        } else if (response.getQty() > 0) {
+                            //lblStockAvailability.setText("Only " + response.getQty() + " left!");
+                            //lblStockAvailability.setForeground(Color.RED);
+                            placeOrderTextArea.append("Only " + response.getQty() + " left!\n");
                         } else {
-                            lblStockAvailability.setText("Out of stock!");
-                            lblStockAvailability.setForeground(Color.RED);
+                            //lblStockAvailability.setText("Out of stock!");
+                            //lblStockAvailability.setForeground(Color.RED);
+                            placeOrderTextArea.append("Not in stock!\n");
                         }
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException ex) {
-                            // TODO Auto-generated catch block
-                            ex.printStackTrace();
-                        }
+                        waitFor(100);
                     }
 
                     @Override
@@ -703,15 +688,37 @@ public class MainGUIApplication {
         btnPlaceOrder = new JButton("Place Order");
         btnPlaceOrder.setEnabled(false);
         panel_service_addOrder.add(btnPlaceOrder);
+
         btnPlaceOrder.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 updateStock(placeOrderTextArea);
+                // clean-up
+                btnPlaceOrder.setEnabled(false);
+                btnNewOrder.setEnabled(true);
+                btnAddToOrder.setEnabled(false);
+                productQtyField.setText("");
+                productQtyField.setEnabled(false);
+                productToOrder.setText("");
+                productToOrder.setEnabled(false);
             }
 
         });
 
+        btnNewOrder = new JButton("New Order");
+        btnNewOrder.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                placeOrderTextArea.setText("");
+                productQtyField.setEnabled(true);
+                productToOrder.setEnabled(true);
+                btnAddToOrder.setEnabled(true);
+                // delete all entries in orderItems ArrayList
+                orderItems.clear();
+            }
+        });
+        btnNewOrder.setEnabled(false);
+
         // add a label to display the response
-        lblPlaceOrder = new JLabel("");
+        JLabel lblPlaceOrder = new JLabel("");
         panel_service_addOrder.add(lblPlaceOrder);
 
         panel_service_searchOrders.add(btnGetOrder);
@@ -739,12 +746,16 @@ public class MainGUIApplication {
         placeOrderTextArea.setWrapStyleWord(true);
         placeOrderTextArea.setEditable(false);
 
+        panel_service_addOrder.add(btnNewOrder);
+
 
         JScrollPane scrollPanePlaceOrder = new JScrollPane(placeOrderTextArea);
         //textResponse.setSize(new Dimension(15, 30));
         panel_service_addOrder.add(scrollPanePlaceOrder);
-        panel_service_addOrder.add(lblStockAvailability);
+        //panel_service_addOrder.add(lblStockAvailability);
+        //panel_service_addOrder.add(btnNewOrder);
     }
+
 
     public static void updateStock(JTextArea textArea) {
         StreamObserver<UpdateQtyResponse> responseObserver =  new StreamObserver<UpdateQtyResponse>() {
@@ -757,12 +768,15 @@ public class MainGUIApplication {
                 textArea.append("\nAll relevant stock levels updated successfully!\n");
                 waitFor(1000);
 
-                textArea.append("\nNow placing your order\n");
-                for (int i = 0; i < 3; i++){
+                textArea.append("\nNow placing your order");
+                for (int i = 0; i < 20; i++){
                     textArea.append(".");
-
-                    waitFor(1000);
+                    waitFor(200);
                 }
+                textArea.append("\n");
+
+                // print new order details
+                placeOrder(placeOrderTextArea);
 
             }
             @Override
@@ -773,9 +787,8 @@ public class MainGUIApplication {
         };
 
         StreamObserver<UpdateQtyRequest> requestObserver =  stockServiceAsyncStub.updateQty(responseObserver);
-        waitFor(500);
 
-        textArea.append("\nRequesting stock update...\n");
+        textArea.append("\nRequesting stock update...\n\n");
 
         waitFor(1000);
 
@@ -790,12 +803,42 @@ public class MainGUIApplication {
             e.printStackTrace();
         }
     }
+
     public static void waitFor(int ms) {
         try {
             //wait for a second
             Thread.sleep(ms);
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    public static void placeOrder(JTextArea textArea) {
+        StreamObserver<GetOrderResponse> responseObserver =  new StreamObserver<GetOrderResponse>() {
+            public void onNext(GetOrderResponse value) {
+                textArea.append(value.getOrderDetails() + "\n");
+            }
+            public void onCompleted() {}
+            @Override
+            public void onError(Throwable t) {
+                // TODO Auto-generated method stub
+
+            }
+        };
+
+        StreamObserver<PlaceOrderRequest> requestObserver =  orderServiceAsyncStub.placeOrder(responseObserver);
+        try {
+            for (Order.OrderItem oi : orderItems) {
+                requestObserver.onNext(PlaceOrderRequest.newBuilder().setStockNumber(oi.product.getStockNumber()).
+                        setProdDescription(oi.product.getDescription()).setProdPrice(oi.product.getPrice()).
+                        setProdQty(oi.product.quantity).setOrderedQty(oi.quantity).build());
+            }
+
+            requestObserver.onCompleted();
+
+        }
+        catch(RuntimeException e) {
             e.printStackTrace();
         }
     }

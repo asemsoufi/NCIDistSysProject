@@ -8,7 +8,7 @@ option java_outer_classname = "OrderServiceImpl";
 package orderService;
 
 service OrderService {
-  rpc placeOrder(stream PlaceOrderRequest) returns (PlaceOrderResponse) {}
+  rpc placeOrder(stream PlaceOrderRequest) returns (GetOrderResponse) {}
   rpc cancelOrder(CancelOrderRequest) returns (CancelOrderResponse) {}
   rpc getOrderDetails(GetOrderRequest) returns (stream GetOrderResponse) {}
   rpc getTotalSales(TotalSalesRequest) returns (TotalSalesResponse) {}
@@ -16,12 +16,12 @@ service OrderService {
 
 message PlaceOrderRequest {
   int32 stockNumber = 1;
-  int32 quantity = 2;
+  string prodDescription = 2;
+  float prodPrice = 3;
+  int32 prodQty = 4;
+  int32 orderedQty = 5;
 }
 
-message PlaceOrderResponse {
-  sint32 orderNumber = 1;
-}
 
 message CancelOrderRequest {
   int32 orderNumber = 1;
