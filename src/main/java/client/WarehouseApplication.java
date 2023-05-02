@@ -8,10 +8,18 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import warehouse.Order;
 import warehouse.Product;
+
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceEvent;
+import javax.jmdns.ServiceInfo;
+import javax.jmdns.ServiceListener;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 
@@ -36,7 +44,7 @@ public class WarehouseApplication {
     private JLabel lblAddEmployee;
     private JLabel lblAddProduct;
     private JButton btnPlaceOrder;
-    private JButton btnNewOrder;
+    private static JButton btnNewOrder;
     private JLabel lblStockAvailability;
     private JTextField stockNumber;
     private JTextField orderNumber;
@@ -71,11 +79,6 @@ public class WarehouseApplication {
     public WarehouseApplication() {
 
 
-        /*String employee_service_type = "_employee._tcp.local.";
-        discoverEmployeeService(employee_service_type);
-
-        String host = employeeServiceInfo.getHostAddresses()[0];
-        int port = employeeServiceInfo.getPort();*/
         String host = "localhost";
         // employee channel
         ManagedChannel employeeChannel = ManagedChannelBuilder
@@ -106,68 +109,6 @@ public class WarehouseApplication {
 
         initialize();
     }
-
-
-//    private void discoverEmployeeService(String service_type) {
-//
-//        System.out.println("Trying to discover employee service...");
-//        try {
-//            // Create a JmDNS instance
-//            System.out.println("Create JmDNS");
-//            JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
-//            System.out.println(jmdns);
-//            System.out.println("Create listener");
-//            jmdns.addServiceListener(service_type, new ServiceListener() {
-//
-//                @Override
-//                public void serviceResolved(ServiceEvent event) {
-//                    System.out.println("Employee Service resolved: " + event.getInfo());
-//
-//                    employeeServiceInfo = event.getInfo();
-//
-//                    int port = employeeServiceInfo.getPort();
-//
-//                    System.out.println("resolving " + service_type + " with properties ...");
-//                    System.out.println("\t port: " + port);
-//                    System.out.println("\t type:" + event.getType());
-//                    System.out.println("\t name: " + event.getName());
-//                    System.out.println("\t description/properties: " + employeeServiceInfo.getNiceTextString());
-//                    System.out.println("\t host: " + employeeServiceInfo.getHostAddresses()[0]);
-//
-//
-//                }
-//
-//                @Override
-//                public void serviceRemoved(ServiceEvent event) {
-//                    System.out.println("Employee Service removed: " + event.getInfo());
-//
-//
-//                }
-//
-//                @Override
-//                public void serviceAdded(ServiceEvent event) {
-//                    System.out.println("Employee Service added: " + event.getInfo());
-//
-//
-//                }
-//            });
-//
-//            // Wait a bit
-//            Thread.sleep(2000);
-//
-//            jmdns.close();
-//
-//        } catch (UnknownHostException e) {
-//            System.out.println(e.getMessage());
-//        } catch (IOException e) {
-//            System.out.println(e.getMessage());
-//        } catch (InterruptedException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-//
-//
-//    }
 
 
     /**
@@ -217,6 +158,7 @@ public class WarehouseApplication {
         JButton btnGetEmployee = new JButton("Find Employee");
         btnGetEmployee.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                employeeTextArea.setText("");
                 int num;
 
                 try {
@@ -716,15 +658,15 @@ public class WarehouseApplication {
 
         btnPlaceOrder.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                updateStock(placeOrderTextArea);
                 // clean-up
                 btnPlaceOrder.setEnabled(false);
-                btnNewOrder.setEnabled(true);
                 btnAddToOrder.setEnabled(false);
                 productQtyField.setText("");
                 productQtyField.setEnabled(false);
                 productToOrder.setText("");
                 productToOrder.setEnabled(false);
+                // place order
+                updateStock(placeOrderTextArea);
             }
 
         });
@@ -803,6 +745,7 @@ public class WarehouseApplication {
 
                 // print new order details
                 placeOrder(placeOrderTextArea);
+                btnNewOrder.setEnabled(true);
 
             }
             @Override
