@@ -383,7 +383,7 @@ public class WarehouseApplication {
                     public void onNext(ProductResponse response) {
                         if (response.getStockNumber() != -1) {
                             stockTextArea.append("Product{no." + response.getStockNumber() + ", " + response.getDescription() +
-                                    ", price:" + response.getPrice() + ", qty:" + response.getQty() + "\n");
+                                    ", price:" + response.getPrice() + ", qty:" + response.getQty() + "}\n");
                         } else {
                             stockTextArea.append(response.getDescription()+ "\n");
                         }
