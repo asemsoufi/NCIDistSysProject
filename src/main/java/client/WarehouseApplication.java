@@ -177,6 +177,8 @@ public class WarehouseApplication {
 
         frame = new JFrame();
         frame.setTitle("Warehouse Services Controller");
+        ImageIcon img = new ImageIcon(".//Files//logo.png");
+        frame.setIconImage(img.getImage());
         frame.setBounds(100, 100, 800, 550);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
