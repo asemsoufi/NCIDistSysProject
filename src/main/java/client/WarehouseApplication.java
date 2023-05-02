@@ -15,7 +15,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
 
-public class MainGUIApplication {
+public class WarehouseApplication {
 
     // employee stubs
     private static EmployeeServiceGrpc.EmployeeServiceBlockingStub employeeServiceBlockingStub;
@@ -55,7 +55,7 @@ public class MainGUIApplication {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    MainGUIApplication window = new MainGUIApplication();
+                    WarehouseApplication window = new WarehouseApplication();
                     window.frame.setVisible(true);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -67,7 +67,7 @@ public class MainGUIApplication {
     /**
      * Create the application.
      */
-    public MainGUIApplication() {
+    public WarehouseApplication() {
 
 
         /*String employee_service_type = "_employee._tcp.local.";
