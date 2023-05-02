@@ -190,6 +190,9 @@ public class WarehouseApplication {
         // Main tabbed pane
         JTabbedPane mainTabbedPane = new JTabbedPane(JTabbedPane.TOP);
         frame.getContentPane().add(mainTabbedPane);
+        // dont allow resize of tabbed pane
+        frame.setResizable(false);
+
 
         JTabbedPane employeeTab = new JTabbedPane(JTabbedPane.TOP);
         mainTabbedPane.addTab("Employees", null, employeeTab, null);
