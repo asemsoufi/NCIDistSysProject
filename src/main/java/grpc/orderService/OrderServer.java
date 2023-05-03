@@ -145,6 +145,7 @@ public class OrderServer extends OrderServiceGrpc.OrderServiceImplBase {
 
         Order order = null;
 
+
         while (sc.hasNextLine())  //returns a boolean value
         {
             String st = sc.nextLine();
