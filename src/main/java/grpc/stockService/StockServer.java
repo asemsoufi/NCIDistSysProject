@@ -132,7 +132,7 @@ public class StockServer extends StockServiceGrpc.StockServiceImplBase {
         //System.out.println("Receiving a Product request.");
         int num = request.getStockNumber();
         if (num == -1) {
-            System.out.println("Received a request to list all products");
+            System.out.println("Processing a request to list all products. Streaming replies...\n");
             for (Product product : stock.getProducts()) {
                 ProductResponse response = ProductResponse.newBuilder().setStockNumber(product.getStockNumber())
                         .setDescription(product.getDescription()).setPrice(product.getPrice()).
@@ -140,11 +140,12 @@ public class StockServer extends StockServiceGrpc.StockServiceImplBase {
                 responseObserver.onNext(response);
             }
         } else if (num >= 1001 && num <= stock.getProducts().get(stock.getProducts().size() - 1).getStockNumber()) {
-            System.out.println("Received a request for product " + num);
+            System.out.println("Processing a request to look for product no. " + num);
             Product found = null;
             for (Product product : stock.getProducts()) {
                 if (product.getStockNumber() == num) {
                     found = product;
+                    System.out.println("Sending a 'Product Found' response to the client.");
                     ProductResponse response = ProductResponse.newBuilder().setStockNumber(found.getStockNumber())
                             .setDescription(found.getDescription()).setPrice(found.getPrice()).
                             setQty(found.getQuantity()).build();
@@ -153,7 +154,7 @@ public class StockServer extends StockServiceGrpc.StockServiceImplBase {
                 }
             }
         } else {
-            System.out.println("Received a request for invalid product " + num);
+            System.out.println("Processing a request for an invalid product " + num + "!");
             ProductResponse response = ProductResponse.newBuilder().setStockNumber(-1)
                     .setDescription("Product not found!").setPrice(-1).
                     setQty(-1).build();
@@ -172,7 +173,7 @@ public class StockServer extends StockServiceGrpc.StockServiceImplBase {
     }
 
     public void addProduct(AddProductRequest request, StreamObserver<AddProductResponse> responseObserver) {
-        System.out.println("Receiving a request to add a new product.");
+        System.out.println("Processing a request to add a new product.");
         int num = -1;
         String description = null;
         float price = -1;
@@ -185,6 +186,7 @@ public class StockServer extends StockServiceGrpc.StockServiceImplBase {
             num = request.getStockNumber();
             if (num < stock.getProducts().get(0).getStockNumber()) {
                 message = "Error! Invalid input!";
+                System.out.println("Sending an 'Invalid Product Number' response!");
                 response = AddProductResponse.newBuilder().setSuccess(result).setMessage(message).build();
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();
@@ -200,6 +202,7 @@ public class StockServer extends StockServiceGrpc.StockServiceImplBase {
         for (Product product : stock.getProducts()) {
             if (product.getStockNumber() == num) {
                 message = "Error! Product number already exists!";
+                System.out.println("Sending an 'product Number already exists' response!");
                 response = AddProductResponse.newBuilder().setSuccess(result).setMessage(message).build();
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();
@@ -211,7 +214,7 @@ public class StockServer extends StockServiceGrpc.StockServiceImplBase {
         stock.addProduct(product);
         result = true;
         message = product.getDescription() + " added successfully!";
-
+        System.out.println("Sending a 'Product Successfully Added' response.");
         response = AddProductResponse.newBuilder().setSuccess(result).setMessage(message).build();
 
         responseObserver.onNext(response);
@@ -219,8 +222,10 @@ public class StockServer extends StockServiceGrpc.StockServiceImplBase {
     }
 
     public StreamObserver<UpdateQtyRequest> updateQty (StreamObserver<UpdateQtyResponse> responseObserver){
+        System.out.println("\nProcessing a request to update stock quantities.\n");
         return new StreamObserver<UpdateQtyRequest>() {
             public void onNext(UpdateQtyRequest request) {
+                System.out.println("Updating qty for product no. " + request.getStockNumber());
                 int stockNumber = request.getStockNumber();
                 int qty = request.getQty();
                 // look for product and update quantity as needed
@@ -229,20 +234,24 @@ public class StockServer extends StockServiceGrpc.StockServiceImplBase {
                         if (product.getQuantity() >= qty) {
                             product.quantity -= qty;
                             // send reply with the update
+                            System.out.println("Sending 'Success' reply with new qty in stock.");
                             UpdateQtyResponse reply = UpdateQtyResponse.newBuilder().setSuccess(true).setMessage("Qty updated! " + product).build();
                             responseObserver.onNext(reply);
                         } else {
+                            System.out.println("Sending 'Not enough stock' reply. Qty unchanged.");
                             UpdateQtyResponse reply = UpdateQtyResponse.newBuilder().setSuccess(false).setMessage("Not enough stock!").build();
                             responseObserver.onNext(reply);
                         }
                         return;
                     }
                 }
+                System.out.println("Sending 'No such product in stock' reply.");
                 UpdateQtyResponse reply = UpdateQtyResponse.newBuilder().setSuccess(false).setMessage("No such product in stock!").build();
                 responseObserver.onNext(reply);
             }
 
             public void onCompleted() {
+                System.out.println("Done updating stock. Response complete.\n");
                 responseObserver.onCompleted();
             }
 

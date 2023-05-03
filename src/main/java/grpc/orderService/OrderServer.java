@@ -178,7 +178,7 @@ public class OrderServer extends OrderServiceGrpc.OrderServiceImplBase {
 
     // implement get total sales method to print the total of all orders
     public void getTotalSales(TotalSalesRequest request, StreamObserver<TotalSalesResponse> responseObserver) {
-        System.out.println("Receiving total sales request...");
+        System.out.println("Processing a Total Sales request...");
         float totalSales = 0;
         for (Order order : orders) {
             totalSales += order.getTotalValue();
@@ -192,27 +192,29 @@ public class OrderServer extends OrderServiceGrpc.OrderServiceImplBase {
     public void getOrderDetails(GetOrderRequest request, StreamObserver<GetOrderResponse> responseObserver) {
         int num = request.getOrderNumber();
         if (num == -1) {
-            System.out.println("Received a request to list all orders");
+            System.out.println("Processing a request to list all orders. Streaming replies...");
             for (Order order : orders) {
                 GetOrderResponse response = GetOrderResponse.newBuilder().setOrderDetails(order.toString()).build();
                 responseObserver.onNext(response);
             }
         } else if (num > 0) {
-            System.out.println("Received a request for order " + num);
+            System.out.println("Processing a request for details of order no. " + num);
             Order found = null;
             for (Order order : orders) {
                 if (order.getOrderNumber() == num) {
                     found = order;
+                    System.out.println("Sending an 'Order Found' response with order details.");
                     GetOrderResponse response = GetOrderResponse.newBuilder().setOrderDetails(found.toString()).build();
                     responseObserver.onNext(response);
                     return;
                 }
             }
             // if order not found
+            System.out.println("Sending an 'Order NOT Found' response!");
             GetOrderResponse response = GetOrderResponse.newBuilder().setOrderDetails("Order not found!").build();
             responseObserver.onNext(response);
         } else {
-            System.out.println("Received a request for invalid order " + num);
+            System.out.println("Processing a request for invalid order " + num);
             GetOrderResponse response = GetOrderResponse.newBuilder().setOrderDetails("Order not found!").build();
             responseObserver.onNext(response);
         }
@@ -235,18 +237,19 @@ public class OrderServer extends OrderServiceGrpc.OrderServiceImplBase {
             CancelOrderResponse response = CancelOrderResponse.newBuilder().setSuccess(false).build();
             responseObserver.onNext(response);
         } else if (num > 0) {
-            System.out.println("Received a request to cancel order " + num);
+            System.out.println("Processing a request to cancel order " + num);
             Order found = null;
             for (Order order : orders) {
                 if (order.getOrderNumber() == num) {
                     orders.remove(order);
+                    System.out.println("replying with a 'Success Cancellation' response.");
                     CancelOrderResponse response = CancelOrderResponse.newBuilder().setSuccess(true).build();
                     responseObserver.onNext(response);
                     break;
                 }
             }
         } else {
-            System.out.println("Received a cancel request for an invalid order " + num);
+            System.out.println("Received a cancel request for an invalid order " + num + "!");
             CancelOrderResponse response = CancelOrderResponse.newBuilder().setSuccess(false).build();
             responseObserver.onNext(response);
         }
@@ -263,6 +266,7 @@ public class OrderServer extends OrderServiceGrpc.OrderServiceImplBase {
     }
 
     public StreamObserver<PlaceOrderRequest> placeOrder (StreamObserver<GetOrderResponse> responseObserver){
+        System.out.println("\nProcessing a request to place a new Order.");
         int orderNumber = orders.get(orders.size() - 1).getOrderNumber() + 1;
         // add a new order with order number alst + 1, and simple date dd/mm/yyyy
         Order order = new Order(orderNumber, new SimpleDateFormat("dd/MM/yyyy").format(new Date()));
@@ -275,10 +279,12 @@ public class OrderServer extends OrderServiceGrpc.OrderServiceImplBase {
                 int qtyToOrder = request.getOrderedQty();
                 Product product = new Product(productNum, productDescription, price, stockQty);
                 order.addItem(product, qtyToOrder);
+                System.out.println(product.getDescription() + ", added to order no. " + orderNumber);
             }
 
             public void onCompleted() {
                 orders.add(order);
+                System.out.println("Order placed successfully. Sending response with new order's details.");
                 GetOrderResponse response = GetOrderResponse.newBuilder().setOrderDetails(order.toString()).build();
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();

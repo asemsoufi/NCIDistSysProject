@@ -133,16 +133,18 @@ public class EmployeeServer extends EmployeeServiceGrpc.EmployeeServiceImplBase 
     @Override
     public void getEmployee(GetEmployeeRequest request, StreamObserver<GetEmployeeResponse> responseObserver) {
         int employeeNumber = request.getEmployeeNumber();
-        System.out.println("Receiving request for employee number: " + employeeNumber);
+        System.out.println("Processing request to look for employee no. " + employeeNumber);
         // search for employee with given number
         for (Employee employee : employees) {
             if (employee.getEmployeeNumber() == employeeNumber) {
+                System.out.println("Employee Found. Sending his details...");
                 GetEmployeeResponse response = GetEmployeeResponse.newBuilder().setEmployeeDetails(employee.toString()).build();
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();
                 return;
             }
         }
+        System.out.println("Sending 'Employee Not Found' response!");
         GetEmployeeResponse response = GetEmployeeResponse.newBuilder().setEmployeeDetails("Employee not found!").build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -153,7 +155,7 @@ public class EmployeeServer extends EmployeeServiceGrpc.EmployeeServiceImplBase 
     @Override
     public void getAllEmployees(GetAllEmployeesRequest request,
                                 StreamObserver<GetEmployeeResponse> responseObserver) {
-        System.out.println("Receiving a request to list all employees.");
+        System.out.println("Processing a request to list all employees. Streaming back replies...");
         for (Employee employee : employees) {
             GetEmployeeResponse response = GetEmployeeResponse.newBuilder().setEmployeeDetails(employee.toString()).build();
             responseObserver.onNext(response);
@@ -171,7 +173,7 @@ public class EmployeeServer extends EmployeeServiceGrpc.EmployeeServiceImplBase 
     }
 
     public void addEmployee(AddEmployeeRequest request, StreamObserver<AddEmployeeResponse> responseObserver) {
-        System.out.println("Receiving a request to add an employee.");
+        System.out.println("\nProcessing a request to add an employee.");
         int num = -1;
         String name = null;
         String position = null;
@@ -204,7 +206,7 @@ public class EmployeeServer extends EmployeeServiceGrpc.EmployeeServiceImplBase 
         employees.add(employee);
         result = true;
         message = name + " added successfully!";
-
+        System.out.println("Sending 'Employee Successfully Added' response.");
         response = AddEmployeeResponse.newBuilder().setSuccess(result).setMessage(message).build();
 
         responseObserver.onNext(response);
